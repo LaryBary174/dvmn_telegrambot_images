@@ -7,9 +7,6 @@ from pathlib import Path
 import telegram
 from environs import Env
 
-env = Env()
-env.read_env()
-
 
 def get_images(folder):
     """Создаем список путей к изображениям в указанной папке"""
@@ -26,17 +23,28 @@ def send_images(bot, chat_id, image_path):
 
 def create_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--time', help='Введите время задержки в секундах', default=3600)
+    parser.add_argument('-t', '--time', type=int, help='Введите время задержки в секундах', default=3600)
     parser.add_argument('-f', '--folder', help='Путь к папке с изображениями', default='images')
+    parser.add_argument('-im', '--image', help='Конкретное изображение')
     return parser
 
 
 def main():
+    env = Env()
+    env.read_env()
     bot = telegram.Bot(token=env.str('TELEGRAM_TOKEN'))
     chat_id = env.str('TELEGRAM_CHAT_ID')
     args = create_parser().parse_args()
     images = get_images(args.folder)
     time_interval = args.time
+    image_to_sends = args.image
+    try:
+        if image_to_sends:
+            send_images(bot, chat_id, image_to_sends)
+        else:
+            send_images(bot, chat_id, random.choice(images))
+    except telegram.error.TelegramError:
+        print('Не удалось загрузить изображение')
 
     sent_images = set()
     while True:
@@ -53,9 +61,10 @@ def main():
                 except telegram.error.TelegramError:
                     print('Не удалось загрузить изображение')
 
-            time.sleep(int(time_interval))
+            time.sleep(time_interval)
         except telegram.error.TelegramError:
             print('Ошибка')
+            time.sleep(10)
         except telegram.error.NetworkError:
             print('Ошибка подключения')
             time.sleep(10)

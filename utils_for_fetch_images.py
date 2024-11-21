@@ -5,9 +5,9 @@ from urllib.parse import urlparse
 import requests
 
 
-def download_image_url(filename: str, url: str, params:dict = None):
+def download_image_url(filename: str, url: str, params:dict = None, path: str = 'images'):
     """Загружаем картинку с url, принимает параметры если необходимо """
-    image_folder = os.path.join('images')
+    image_folder = os.path.join(path)
     os.makedirs(image_folder, exist_ok=True)
     path_to_jpeg = os.path.join(image_folder, f'{filename}{expand_file(url)}')
     response = requests.get(url=url, params=params)
